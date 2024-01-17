@@ -1,6 +1,83 @@
+import random
+
 MAX_LINES = 3
 MAX_BET = 100
 MIN_BET = 1
+
+ROWS = 3
+COLS = 3
+
+# symbols in a wheel/COLS
+symbol_count = {
+    "A": 2,
+    "B": 4,
+    "C": 6,
+    "D": 8, 
+}
+
+# the more rare symbol is the higher bet gets multiplied
+symbol_value = {
+    "A": 5,
+    "B": 4,
+    "C": 3,
+    "D": 2, 
+}
+
+def check_winnings(columns, lines, bet, values):
+    winnings = 0
+    winning_lines = []
+    for line in range(lines):
+        symbol = columns[0][line]
+        for column in columns:
+            symbol_to_check = column[line]
+            # if symbols are not same break
+            if symbol != symbol_to_check:
+                break
+        else:
+            # bet on each line
+            winnings += values[symbol] * bet
+            winning_lines.append(line + 1)  # line that was won
+    
+    return winnings, winning_lines
+
+
+
+
+# outcome of slot machine
+# generate items in slot machine
+def get_slot_machine_spin(rows, cols, symbols):
+    all_symbols = []
+    for symbol, symbol_count in symbols.items():
+        for _ in range(symbol_count):
+            all_symbols.append(symbol)
+    
+    
+    columns = []
+    # generate a column for every column there is
+    for _ in range(cols):
+        column = []
+        current_symbols = all_symbols[:]  # copy all_symbols 
+        for _ in range(rows):
+            value = random.choice(current_symbols)
+            current_symbols.remove(value)
+            column.append(value)
+        
+        columns.append(column)
+    
+    return columns
+
+
+def print_slot_machine(columns):
+    # transpose
+    for row in range(len(columns[0])):
+        for i, column in enumerate(columns):
+            if i != len(columns) - 1:  # maximum index to have access to shark film
+                print(column[row],end=" | ")
+            else:
+                print(column[row], end="")
+        
+        print()
+
 
 
 def deposit():
@@ -53,12 +130,38 @@ def get_bet():
     return amount
     
 
+def spin(balance):
+    lines = get_number_of_lines()
+    # check for invalid bet
+    while True:
+        bet = get_bet()
+        total_bet = bet * lines
+        if total_bet > balance:
+            print(
+                f"You do not have enough to bet that amount, your current balance is: ${balance}")
+        else:
+            break
+    print(f"You are betting ${bet} on {lines} lines. Total bet is equal to: ${total_bet}")
+
+    slots = get_slot_machine_spin(ROWS, COLS, symbol_count)
+    print_slot_machine(slots)
+    winnings, winning_lines = check_winnings(slots, lines, bet, symbol_value)
+    print(f"You won ${winnings}.")
+    print(f"You won on line(s):", *winning_lines)
+    return winnings - total_bet
+
 
 def main():
     balance = deposit()
-    lines = get_number_of_lines()
-    bet = get_bet()
-    print(balance, lines)
+    while True:
+        print(f"Current balance is ${balance}")
+        answer = input("Press enter to play (q to quit).")
+        if answer == "q":
+            break
+        balance += spin(balance)
+        
+    print(f"You left with ${balance}")
+
 
 
 main()
